@@ -1,0 +1,6 @@
+.axis .domain {
+  stroke: none;
+}
+.x-axis > .tick > line {
+  stroke: white;
+}
