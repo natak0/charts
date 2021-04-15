@@ -13,10 +13,11 @@ const prepareBarChartData = (data) => {
 }
 
 //main
-const ready = (items) => {
+const prepareData = (items) => {
     const itemsClean = filterData(items);
-    const barChartData = prepareBarChartData(itemsClean).sort((a, b) => { return d3.descending(a.healthy_life_expectancy_at_birth - b.healthy_life_expectancy_at_birth) });
-    console.log(items,itemsClean,barChartData);
+    const barChartData =itemsClean.sort((a, b) => { return b.healthy_life_expectancy_at_birth - a.healthy_life_expectancy_at_birth });
+    console.log(items, itemsClean, barChartData);
+    return barChartData;
 }
 
 //utilities
@@ -31,7 +32,7 @@ const type = (d) => {
         life_ladder: d.life_ladder,
         gdp_per_capita: d.gdp_per_capita,
         social_support: d.social_support,
-        healthy_life_expectancy_at_birth: d.healthy_life_expectancy_at_birth,
+        healthy_life_expectancy_at_birth: parseNA(d.healthy_life_expectancy_at_birth),
         freedom_life_choices: d.freedom_life_choices,
         generosity: d.generosity,
         perceptions_of_corruption: d.perceptions_of_corruption,
@@ -40,12 +41,47 @@ const type = (d) => {
     }
 }
 
-//d3.csv('data/2021_1T_OD_Arbrat_Parcs_BCN.csv').then(res => { console.log(res) });
 
+//d3.csv('data/2021_1T_OD_Arbrat_Parcs_BCN.csv').then(res => { console.log(res) });
+//d3 chart
+//margin convention
+const defineChart = (data) => {
+    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+    const width = 500;
+    const height = 500;
+    const widthChart = 500 - margin.left - margin.right;
+    const heightChart = 500 - margin.top - margin.bottom;
+
+    //draw chart base
+    d3.select('.bar-chart__container')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)
+
+    //Scales
+    const xExtent = d3.extent(data, d => d.healthy_life_expectancy_at_birth!=='' ? d.healthy_life_expectancy_at_birth : null);
+    console.log(xExtent);
+    debugger;
+
+    const xScale = d3.scaleLinear()
+        .domain([0, xExtent])
+        .range([0, 300])
+}
 //load data
-d3.csv('data/world-happiness-report.csv', type)
-    .then(res => { ready(res) })
-    .catch(error => console.log(error))
+let obj;
+
+async function getData () {
+    await d3.csv('data/world-happiness-report.csv', type)
+        .then(res => { obj = prepareData(res) })
+        .catch(error => console.log(error));
+    console.log('obj', obj);
+    defineChart(obj);
+}
+getData();
+
+
 
 
 //    .then(res => { ready(res) });
