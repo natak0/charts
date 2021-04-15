@@ -1,13 +1,18 @@
 {
     "description": "Data vizualisations with D3",
     "dependencies": {
-        "d3-fetch": "2.0.0",
-        "prettier": "^2.2.1"
+        "d3": "^6.6.2",
+        "d3-fetch": "2.0.0"
     },
     "devDependencies": {
-        "http-server": "^0.12.3"
+        "http-server": "^0.12.3",
+        "prettier": "2.2.1",
+        "prettier-eslint": "^12.0.0"
     },
     "scripts": {
         "start": "http-server ."
-    }
+    },
+    "git.ignoredRepositories": [
+        "node_modules"
+    ]
 }
