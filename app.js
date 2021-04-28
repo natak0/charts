@@ -1,17 +1,7 @@
-//import { svg } from '../node_modules/';
 
 //data preparation
 const filterData = (data) => {
     return data.filter(d=>{return (d.year == 2020)})
-}
-
-const prepareBarChartData = (data) => {
-    const dataMap = data.entries(data);
-       // v => d3.sum(v, leaf =>leaf.life_ladder),
-        //d => d.country_name )
-    const dataArray = Array.from(dataMap);
-   //const dataArray = Array.from(dataMap, d => ({ country: d[0], lifeLadder: d[1] }));
-    return dataArray;
 }
 
 //main
@@ -116,12 +106,15 @@ const defineChart = (data) => {
 }
 //load data
 let obj;
+let scatterObj;
 
 async function getData () {
     await d3.csv('data/world-happiness-report.csv', type)
-        .then(res => { obj = prepareData(res) })
+        //.then(res => { obj = prepareData(res) })
+        .then(res => { scatterObj = prepareScatterData(res) })
         .catch(error => console.log(error));
-    console.log('obj', obj);
+    console.log('obj', obj, 'scatter', scatterObj);
     defineChart(obj);
 }
 getData();
+

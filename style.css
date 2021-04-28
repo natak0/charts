@@ -4,3 +4,8 @@
 .x-axis > .tick > line {
   stroke: white;
 }
+.scatter-chart__container .x-axis .tick line {
+  stroke: gray;
+  stroke-width: 0.5;
+  stroke-dasharray: 4, 2;
+}
