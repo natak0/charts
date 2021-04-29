@@ -76,7 +76,6 @@ const defineChart = (data) => {
         .attr('width', d => xScale(d.healthy_life_expectancy_at_birth))
         .attr('height', yScale.bandwidth())
         .style('fill', 'blue');
-        //.selectAll('bar').data([3, 2, 1]).enter().append('rect');
     function formatTicks(d) {
         return d3.format('~s')(d);
     }
@@ -88,7 +87,6 @@ const defineChart = (data) => {
         .tickSizeOuter(0);
     const yAxis = d3
         .axisLeft(yScale)
-        //.tickFormat()
         .tickSize(0);
     
     const xAxisDraw = svg

@@ -5,17 +5,10 @@ const filterData = (data) => {
 }
 
 //main
-
-// scatter plot data
-const prepareScatterData = (items) => {
-    //const reducedData = items.sort((a, b) => b.healthy_life_expectancy_at_birth - a.healthy_life_expectancy_at_birth)
-    //const scatterData = reducedData.filter((d, i) => i < 100);
-    //const scatterData2 = d3.groups(scatterData, d => d.country_name);
-    //return scatterData2.map(item=>item[1][0]);
+const prepareData = (items) => {
     const itemsClean = filterData(items);
-    const scatterData =itemsClean.sort((a, b) => { return b.healthy_life_expectancy_at_birth - a.healthy_life_expectancy_at_birth });
-    
-    return scatterData;
+    const barChartData =itemsClean.sort((a, b) => { return b.healthy_life_expectancy_at_birth - a.healthy_life_expectancy_at_birth });
+    return barChartData;
 }
 
 //utilities
@@ -42,19 +35,14 @@ const type = (d) => {
 //d3 chart
 //margin convention
 const defineChart = (data) => {
-    const margin = { top: 50, right: 100, bottom: 30, left: 150 };
-    const width = 500;
-    const height = 500;
+    const margin = { top: 100, right: 30, bottom: 30, left: 150 };
+    const width = 800;
+    const height = 1000;
     const widthChart = width - margin.left - margin.right;
     const heightChart = height - margin.top - margin.bottom;
 
     //Scales
-    const xExtent = d3
-        .extent(data, d => d.healthy_life_expectancy_at_birth !== '' ? d.healthy_life_expectancy_at_birth : null)
-        .map((d, i) => i === 0 ? d * 0.95 : d * 1.05);//remove dots from axis
-    const yExtent = d3
-        .extent(data, d => d.social_support)
-        .map((d,i) => (i===0 ? d*0.95 : d*1.05));
+    const xExtent = d3.extent(data, d => d.healthy_life_expectancy_at_birth!=='' ? d.healthy_life_expectancy_at_birth : null);
     const xMax = d3.max(data, d => d.healthy_life_expectancy_at_birth!=='' ? d.healthy_life_expectancy_at_birth : null)
 
 
@@ -63,20 +51,19 @@ const defineChart = (data) => {
         .domain(xExtent)
         .range([0, widthChart]);
     const yScale = d3
-        .scaleLinear()
-        .domain(yExtent)
-        .range([heightChart, 0])
-        //.paddingInner(0.25);
+        .scaleBand()
+        .domain(data.map(d => d.country_name))
+        .rangeRound([0, heightChart])
+        .paddingInner(0.25);
     
     //draw chart base
-    const svg = d3.select('.scatter-plot__container')
+    const svg = d3.select('.bar-chart__container')
         .append('svg')
         .attr('width', width)
         .attr('height', height)
         .append('g')
         .attr('transform', `translate(${margin.left}, ${margin.top})`);
-    
-    // draw header
+// draw header
 
     const header = svg
         .append('g')
@@ -85,7 +72,7 @@ const defineChart = (data) => {
         .append('text');
     header
         .append('tspan')
-        .text('Social Support vs. Healthy Life expectation');
+        .text('Healthy Life expectation');
     header
         .append('tspan')
         .attr('x', 0)
@@ -93,62 +80,39 @@ const defineChart = (data) => {
         .style('font-size', '0.8em')
         .style('fill', 'gray')
         .text('All countries from World Happiness Report 2020')
-
-    // draw scatter plot
-    const scatter = svg
-        .append('g')
-        .attr('class','scatter-points')
-        .selectAll('scatter')
+    // draw bars //
+    const bars = svg
+        .selectAll('bar')
         .data(data)
         .enter()
-        .append('circle')
-        .attr('class', 'scatter')
-        .attr('cy', d => yScale(d.social_support))
-        .attr('cx', d => xScale(d.healthy_life_expectancy_at_birth))
-        .attr('r', 3)
-        .style('fill', 'blue')
-        .style('fill-opacity', 0.7);
+        .append('rect')
+        .attr('class', 'bar')
+        .attr('y', d => yScale(d.country_name))
+        .attr('width', d => xScale(d.healthy_life_expectancy_at_birth))
+        .attr('height', yScale.bandwidth())
+        .style('fill', 'blue');
     
     function formatTicks(d) {
         return d3.format('~s')(d);
     }
     // draw axes //
     const xAxis = d3
-        .axisBottom(xScale)
-        .ticks(5)
+        .axisTop(xScale)
         .tickFormat(formatTicks) // add space between values //
         .tickSizeInner(-heightChart)
         .tickSizeOuter(0);
     const yAxis = d3
         .axisLeft(yScale)
-        .ticks(5)
-        //.tickFormat(formatTicks)
-        .tickSizeOuter(0)
         .tickSize(0);
-    
-    const addLabel = (axis, label, x) => {
-        axis
-            .selectAll('.tick:last-of-type text')
-            .clone()
-            .text(label)
-            .attr('x', x)
-            .style('text-anchor', 'start')
-    }
     
     const xAxisDraw = svg
         .append('g')
         .attr('class', 'x-axis')
-        .attr('transform', `translate(0,${heightChart})`)
-        .call(xAxis)
-        .call(addLabel, 'Life Expectancy', 25);
-    
-    xAxisDraw.selectAll('text').attr('dy','1em')
-
+        .call(xAxis);
     const yAxisDraw = svg
         .append('g')
         .attr('class', 'y-axis')
-        .call(yAxis)
-        .call(addLabel, 'Social Support', 15);
+        .call(yAxis);
     
     yAxisDraw
         .selectAll('text')
@@ -159,9 +123,10 @@ let obj;
 
 async function getData () {
     await d3.csv('data/world-happiness-report.csv', type)
-        .then(res => { obj = prepareScatterData(res) })
+        .then(res => { obj = prepareData(res) })
         .catch(error => console.log(error));
-    console.log('obj', obj, 'scatter', obj);
+    console.log('obj', obj);
     defineChart(obj);
 }
 getData();
+
