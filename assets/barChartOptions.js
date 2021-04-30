@@ -7,7 +7,9 @@ const filterData = (data) => {
 //main
 const prepareData = (items) => {
     const itemsClean = filterData(items);
-    const barChartData =itemsClean.sort((a, b) => { return b.healthy_life_expectancy_at_birth - a.healthy_life_expectancy_at_birth });
+    const barChartData = itemsClean
+        .sort((a, b) => { return b.healthy_life_expectancy_at_birth - a.healthy_life_expectancy_at_birth })
+        //.filter((d,i)=>i<15);
     return barChartData;
 }
 
@@ -35,6 +37,15 @@ const type = (d) => {
 //d3 chart
 //margin convention
 const defineChart = (data) => {
+    let metric = 'healthy_life_expectancy_at_birth';
+    function clickTheButton() {
+        metric = this.dataset.name;
+
+        const updatedData = data
+            .sort((a, b) => b[metric] - a[metric])
+            .filter((d, i) => i < 15);
+        update(updatedData);
+    }
     const margin = { top: 100, right: 30, bottom: 30, left: 150 };
     const width = 800;
     const height = 1000;
@@ -81,16 +92,57 @@ const defineChart = (data) => {
         .style('fill', 'gray')
         .text('All countries from World Happiness Report 2020')
     // draw bars //
-    const bars = svg
-        .selectAll('bar')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('class', 'bar')
-        .attr('y', d => yScale(d.country_name))
-        .attr('width', d => xScale(d.healthy_life_expectancy_at_birth))
-        .attr('height', yScale.bandwidth())
-        .style('fill', 'blue');
+    function update(data) {
+
+        // update scales
+        xScale.domain([0, d3.max(data, d => d[metric])])
+        yScale.domain(data.map(d => d.country_name))
+        
+        //set up transition
+        const length = 1000;
+        const t = d3.transition().duration(length);
+
+        //update bars
+        const bars = svg
+            .selectAll('bar')
+            .data(data, d => d.country_name) //stick to the title when rerendering
+            .join(
+                enter => {
+                    enter
+                        .append('rect')
+                        .attr('class', 'bar')
+                        .attr('y', d => yScale(d.country_name))
+                        .attr('width', d => xScale(d[metric]))
+                        .attr('height', yScale.bandwidth())
+                        .style('fill', 'lightcyan')
+                        .transition(t)
+                        .delay((d,i)=>i*20)
+                        .attr('width', d => xScale([d[metric]])
+                        .style('fill', blue)
+                },
+                update => {
+                    update
+                        .attr('y', d => yScale())
+                        .attr('width', d => xScale(d[metric]))
+                        .transition(t)
+                        .delay((d, i) => i * 20)
+                },
+                exit => {
+                    exit
+                        .transition()
+                        .delay((d, i) => i * 20)
+                        .style('fill-opacity', 0)
+                        .remove()
+                }
+        )
+        // update axis
+        xAxisDraw.transition(t).call(xAxis.scale(xScale));
+        yAxisDraw.transition(t).call(yAxis.scale(yScale));
+
+        //update header
+
+           
+    }
     
     function formatTicks(d) {
         return d3.format('~s')(d);
@@ -108,15 +160,19 @@ const defineChart = (data) => {
     const xAxisDraw = svg
         .append('g')
         .attr('class', 'x-axis')
-        .call(xAxis);
+       // .call(xAxis);
     const yAxisDraw = svg
         .append('g')
         .attr('class', 'y-axis')
-        .call(yAxis);
+        //.call(yAxis);
     
     yAxisDraw
         .selectAll('text')
-        .attr('dx', '-0.6em')
+        .attr('dx', '-0.6em');
+    
+    //update(data);
+    //listen to click events
+    d3.selectAll('bar-chart__button').on('click', clickTheButton());
 }
 //load data
 let obj;
