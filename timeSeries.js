@@ -77,14 +77,14 @@ const defineChart = (data) => {
     const heightChart = height - margin.top - margin.bottom;
 
     //Scales
-    const xExtent = d3.extent(data.dates);
+    const xExtent = d3.extent(data.dates)//).map(y => { return new Date(y) }));
     const yExtent = data.yMax;
 
     const xScale = d3
         //.scaleTime()
         .scaleLinear()
         .domain(xExtent)
-        .range([0, widthChart]);
+        .range([0, widthChart])
     const yScale = d3
         .scaleLinear()
         .domain([0, yExtent])
@@ -200,7 +200,6 @@ async function getData () {
     await d3.csv('data/world-happiness-report.csv', type)
         .then(res => { obj = prepareLineChartData(res) })
         .catch(error => console.log(error));
-    console.log('obj', obj, 'timeseries', obj);
     defineChart(obj);
 }
 getData();
